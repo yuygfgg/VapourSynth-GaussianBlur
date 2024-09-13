@@ -254,6 +254,6 @@ static void VS_CC gaussianBlurCreate(const VSMap *in, VSMap *out, void *userData
 // Plugin initialization
 
 VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin *plugin, const VSPLUGINAPI *vspapi) {
-    vspapi->configPlugin("com.example.gaussianblur", "gaussblur", "VapourSynth Gaussian Blur Plugin", VS_MAKE_VERSION(1, 0), VAPOURSYNTH_API_VERSION, 0, plugin);
+    vspapi->configPlugin("com.yuygfgg.gaussianblur", "gaussblur", "VapourSynth Gaussian Blur Plugin", VS_MAKE_VERSION(1, 0), VAPOURSYNTH_API_VERSION, 0, plugin);
     vspapi->registerFunction("GaussianBlur", "clip:vnode;radius:int;", "clip:vnode;", gaussianBlurCreate, NULL, plugin);
 }
