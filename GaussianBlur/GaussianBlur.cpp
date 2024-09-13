@@ -63,20 +63,17 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
             uint16_t *tmp = (uint16_t *)malloc(plane_height * plane_width * sizeof(uint16_t));
 
 #ifdef __ARM_NEON__
+            // Horizontal processing
             for (int y = 0; y < plane_height; y++) {
-                int x = 0;
-                for (; x <= plane_width - 8; x += 8) { // Process 8 pixels at a time
+                // Process inner part with NEON code
+                int x = radius;
+                for (; x <= plane_width - radius - 8; x += 8) { // Process 8 pixels at a time
                     float32x4_t val_low = vdupq_n_f32(0.0f);
                     float32x4_t val_high = vdupq_n_f32(0.0f);
 
                     for (int k = -radius; k <= radius; k++) {
-                        int xx = x + k;
-                        if (xx < 0)
-                            xx = 0;
-                        else if (xx >= plane_width)
-                            xx = plane_width - 1;
+                        uint16x8_t src_vals = vld1q_u16(&srcp[y * src_stride + x + k]);
 
-                        uint16x8_t src_vals = vld1q_u16(&srcp[y * src_stride + xx]);
                         float32x4_t src_vals_low = vcvtq_f32_u32(vmovl_u16(vget_low_u16(src_vals)));
                         float32x4_t src_vals_high = vcvtq_f32_u32(vmovl_u16(vget_high_u16(src_vals)));
 
@@ -93,8 +90,23 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
                     vst1q_u16(&tmp[y * plane_width + x], result);
                 }
 
-                // Handle remaining pixels with scalar code
-                for (; x < plane_width; x++) {
+                // Process left edge
+                for (x = 0; x < radius; x++) {
+                    double val = 0.0;
+                    for (int k = -radius; k <= radius; k++) {
+                        int xx = x + k;
+                        if (xx < 0)
+                            xx = 0;
+                        else if (xx >= plane_width)
+                            xx = plane_width - 1;
+                        val += srcp[y * src_stride + xx] * kernel[k + radius];
+                    }
+                    val = val < 0 ? 0 : val > 65535 ? 65535 : val;
+                    tmp[y * plane_width + x] = (uint16_t)(val + 0.5);
+                }
+
+                // Process right edge
+                for (x = plane_width - radius; x < plane_width; x++) {
                     double val = 0.0;
                     for (int k = -radius; k <= radius; k++) {
                         int xx = x + k;
@@ -109,6 +121,7 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
                 }
             }
 #else
+            // Scalar implementation for non-NEON systems
             for (int y = 0; y < plane_height; y++) {
                 for (int x = 0; x < plane_width; x++) {
                     double val = 0.0;
@@ -127,20 +140,25 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
 #endif
 
 #ifdef __ARM_NEON__
+            // Vertical processing
             for (int y = 0; y < plane_height; y++) {
-                int x = 0;
-                for (; x <= plane_width - 8; x += 8) {
+                // Process inner part with NEON code
+                int x = radius;
+                for (; x <= plane_width - radius - 8; x += 8) {
                     float32x4_t val_low = vdupq_n_f32(0.0f);
                     float32x4_t val_high = vdupq_n_f32(0.0f);
 
                     for (int k = -radius; k <= radius; k++) {
                         int yy = y + k;
+
+                        // Boundary check for vertical blur
                         if (yy < 0)
                             yy = 0;
                         else if (yy >= plane_height)
                             yy = plane_height - 1;
 
                         uint16x8_t tmp_vals = vld1q_u16(&tmp[yy * plane_width + x]);
+
                         float32x4_t tmp_vals_low = vcvtq_f32_u32(vmovl_u16(vget_low_u16(tmp_vals)));
                         float32x4_t tmp_vals_high = vcvtq_f32_u32(vmovl_u16(vget_high_u16(tmp_vals)));
 
@@ -158,7 +176,22 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
                 }
 
                 // Handle remaining pixels with scalar code
-                for (; x < plane_width; x++) {
+                for (x = 0; x < radius; x++) {
+                    double val = 0.0;
+                    for (int k = -radius; k <= radius; k++) {
+                        int yy = y + k;
+                        if (yy < 0)
+                            yy = 0;
+                        else if (yy >= plane_height)
+                            yy = plane_height - 1;
+                        val += tmp[yy * plane_width + x] * kernel[k + radius];
+                    }
+                    val = val < 0 ? 0 : val > 65535 ? 65535 : val;
+                    dstp[y * dst_stride + x] = (uint16_t)(val + 0.5);
+                }
+
+                // Process right edge
+                for (x = plane_width - radius; x < plane_width; x++) {
                     double val = 0.0;
                     for (int k = -radius; k <= radius; k++) {
                         int yy = y + k;
@@ -173,6 +206,7 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
                 }
             }
 #else
+            // Scalar implementation for non-NEON systems
             for (int y = 0; y < plane_height; y++) {
                 for (int x = 0; x < plane_width; x++) {
                     double val = 0.0;

@@ -10,7 +10,7 @@ cxx = meson.get_compiler('cpp')
 gcc_syntax = cxx.get_argument_syntax() == 'gcc'
 
 
-add_project_arguments(gcc_syntax ? ['-O3'] : '/GS-', language: 'cpp')
+add_project_arguments(gcc_syntax ? ['-Ofast'] : '/GS-', language: 'cpp')
 
 if gcc_syntax
   vapoursynth_dep = dependency('vapoursynth', version: '>=55').partial_dependency(compile_args: true, includes: true)
