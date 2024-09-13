@@ -62,6 +62,8 @@ Position 5: (212, 1446)
 
 ## Performance
 
+Input clip: $1920$ $\times$ $1080$, YUV420P16, radius=100
+
 | Configuration  | FPS    |
 |----------------|--------|
 | C+O0           | 1.85   |
