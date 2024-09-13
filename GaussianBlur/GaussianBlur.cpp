@@ -84,6 +84,10 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
                         val_high = vmlaq_n_f32(val_high, src_vals_high, kernel_val);
                     }
 
+                    // Apply rounding before converting back to integer
+                    val_low = vaddq_f32(val_low, vdupq_n_f32(0.5f));
+                    val_high = vaddq_f32(val_high, vdupq_n_f32(0.5f));
+
                     // Convert back to 16-bit and store results
                     uint16x8_t result = vcombine_u16(vqmovn_u32(vcvtq_u32_f32(val_low)),
                                                      vqmovn_u32(vcvtq_u32_f32(val_high)));
@@ -101,8 +105,9 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
                             xx = plane_width - 1;
                         val += srcp[y * src_stride + xx] * kernel[k + radius];
                     }
-                    val = val < 0 ? 0 : val > 65535 ? 65535 : val;
-                    tmp[y * plane_width + x] = (uint16_t)(val + 0.5);
+                    // Apply rounding
+                    val = val < 0 ? 0 : val > 65535 ? 65535 : val + 0.5;
+                    tmp[y * plane_width + x] = (uint16_t)(val);
                 }
 
                 // Process right edge
@@ -116,8 +121,9 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
                             xx = plane_width - 1;
                         val += srcp[y * src_stride + xx] * kernel[k + radius];
                     }
-                    val = val < 0 ? 0 : val > 65535 ? 65535 : val;
-                    tmp[y * plane_width + x] = (uint16_t)(val + 0.5);
+                    // Apply rounding
+                    val = val < 0 ? 0 : val > 65535 ? 65535 : val + 0.5;
+                    tmp[y * plane_width + x] = (uint16_t)(val);
                 }
             }
 #else
@@ -133,8 +139,9 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
                             xx = plane_width - 1;
                         val += srcp[y * src_stride + xx] * kernel[k + radius];
                     }
-                    val = val < 0 ? 0 : val > 65535 ? 65535 : val;
-                    tmp[y * plane_width + x] = (uint16_t)(val + 0.5);
+                    // Apply rounding
+                    val = val < 0 ? 0 : val > 65535 ? 65535 : val + 0.5;
+                    tmp[y * plane_width + x] = (uint16_t)(val);
                 }
             }
 #endif
@@ -169,6 +176,10 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
                         val_high = vmlaq_n_f32(val_high, tmp_vals_high, kernel_val);
                     }
 
+                    // Apply rounding before converting back to integer
+                    val_low = vaddq_f32(val_low, vdupq_n_f32(0.5f));
+                    val_high = vaddq_f32(val_high, vdupq_n_f32(0.5f));
+
                     // Convert back to 16-bit and store results
                     uint16x8_t result = vcombine_u16(vqmovn_u32(vcvtq_u32_f32(val_low)),
                                                      vqmovn_u32(vcvtq_u32_f32(val_high)));
@@ -186,8 +197,9 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
                             yy = plane_height - 1;
                         val += tmp[yy * plane_width + x] * kernel[k + radius];
                     }
-                    val = val < 0 ? 0 : val > 65535 ? 65535 : val;
-                    dstp[y * dst_stride + x] = (uint16_t)(val + 0.5);
+                    // Apply rounding
+                    val = val < 0 ? 0 : val > 65535 ? 65535 : val + 0.5;
+                    dstp[y * dst_stride + x] = (uint16_t)(val);
                 }
 
                 // Process right edge
@@ -201,8 +213,9 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
                             yy = plane_height - 1;
                         val += tmp[yy * plane_width + x] * kernel[k + radius];
                     }
-                    val = val < 0 ? 0 : val > 65535 ? 65535 : val;
-                    dstp[y * dst_stride + x] = (uint16_t)(val + 0.5);
+                    // Apply rounding
+                    val = val < 0 ? 0 : val > 65535 ? 65535 : val + 0.5;
+                    dstp[y * dst_stride + x] = (uint16_t)(val);
                 }
             }
 #else
@@ -218,8 +231,9 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
                             yy = plane_height - 1;
                         val += tmp[yy * plane_width + x] * kernel[k + radius];
                     }
-                    val = val < 0 ? 0 : val > 65535 ? 65535 : val;
-                    dstp[y * dst_stride + x] = (uint16_t)(val + 0.5);
+                    // Apply rounding
+                    val = val < 0 ? 0 : val > 65535 ? 65535 : val + 0.5;
+                    dstp[y * dst_stride + x] = (uint16_t)(val);
                 }
             }
 #endif
