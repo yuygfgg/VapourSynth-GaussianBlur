@@ -249,6 +249,8 @@ static const VSFrame *VS_CC gaussianBlurGetFrame(int n, int activationReason, vo
     }
 
     return NULL;
+
+    (void)frameData;
 }
 
 // Free all allocated data when the filter is destroyed
@@ -256,6 +258,8 @@ static void VS_CC gaussianBlurFree(void *instanceData, VSCore *core, const VSAPI
     GaussianBlurData *d = (GaussianBlurData *)instanceData;
     vsapi->freeNode(d->node);
     free(d);
+
+    (void)core;
 }
 
 // This function is responsible for validating arguments and creating the filter instance
@@ -296,6 +300,8 @@ static void VS_CC gaussianBlurCreate(const VSMap *in, VSMap *out, void *userData
     // Create the filter
     VSFilterDependency deps[] = {{d.node, rpStrictSpatial}};
     vsapi->createVideoFilter(out, "GaussianBlur", vi, gaussianBlurGetFrame, gaussianBlurFree, fmParallel, deps, 1, data, core);
+
+    (void)userData;
 }
 
 //////////////////////////////////////////
