@@ -2,6 +2,8 @@
 
 This VapourSynth plugin applies a Gaussian blur to the input video node. The blur strength is determined by the `radius` parameter. The implementation uses NEON acceleration on ARM platforms for optimal performance.
 
+**NEVER USE IT FOR ANY PURPOSE. I WROTE IT ONLY FOR LEARNING ABOUT VS PLUGINS AND NEON**
+
 ## Build Instructions
 
 ```bash
